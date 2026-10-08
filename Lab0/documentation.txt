@@ -1,210 +1,36 @@
-================================================================================
-LABORATORY 0 - PARALLEL AND DISTRIBUTED PROGRAMMING (PPD)
-VECTOR ADDITION (SEQUENTIAL BASELINE BENCHMARK - C++ & JAVA)
-================================================================================
+Lab 0 - PPD - Vector Addition
 
-1. REQUIREMENTS ANALYSIS
---------------------------------------------------------------------------------
-1.1 Topic:
-    Development and empirical performance benchmarking of sequential vector
-    addition for two real-valued vectors A and B of size n, producing vector C,
-    implemented in both C++ and Java.
+1. Requirements Analysis
+- Write a program that adds two vectors in C++ and Java.
+- Measure the execution time of the addition (ignoring file reading/writing).
+- Run it at least 10 times and calculate the average time.
+- Verify that the outputs match the expected results.
 
-1.2 Requirements:
-    - Implement a C++ program that loads two real-number vectors A and B of size
-      n from an input file, performs element-wise addition C[i] = A[i] + B[i],
-      and writes the resulting vector C to an output file.
-    - Implement the identical problem logic in Java following the exact same
-      architecture, naming conventions, and code style.
-    - Measure the execution time of the vector addition operation.
-    - Automate repeated executions (at least 10 executions per test configuration)
-      using benchmark scripts, recording results to CSV and computing averages.
-    - Verify the correctness of executions by ensuring the output files match
-      the expected sequential results using a file verification function.
+2. Design
+- Data Structures: I used std::vector<double> in C++ and double[] in Java.
+- Thread Partitioning: This is a sequential version, so everything runs on the main thread (the thread argument is ignored).
+- Functions used:
+  - readInput: Reads the size and the vectors from the file.
+  - addVectors: Does the actual math (C[i] = A[i] + B[i]).
+  - writeOutput: Saves the result to a file.
+  - main: Handles the arguments, timing, and calling the other functions.
 
-1.3 Constraints:
-    - Data must always be loaded from an input file.
-    - For correctness verification, a dedicated comparison function must check
-      that output files contain identical contents.
-    - Measurement must target the core algorithmic section (vector addition),
-      preventing file I/O overhead from distorting performance metrics.
-    - Repeated executions (10 runs) must be invoked externally via automation
-      scripts; internal program loops repeating the timed function 10 times are
-      strictly forbidden (Rule 5).
-    - Double precision floating-point representation (`double`) must be used for
-      all vector elements.
+3. Implementation Details
+- C++ uses std::chrono for timing and is compiled with g++ -O3.
+- Java uses System.nanoTime() for timing.
+- I wrote some simple bash scripts (run_cpp, run_java, repeat) to automate running the programs 10 times and saving the times to a csv file.
 
+4. Test Cases
+- I tested with input sizes of 1,000, 10,000, and 100,000 elements.
+- Each test was run 10 times to get a stable average.
 
-2. ARCHITECTURAL DESIGN
---------------------------------------------------------------------------------
-2.1 Data Structures:
-    - C++:
-      `std::vector<double>` is utilized to represent dynamic, contiguous arrays
-      of real numbers on the heap with automatic memory lifecycle management
-      (RAII) and size tracking (`.size()`).
-    - Java:
-      Primitive dynamic arrays `double[]` are used for optimal memory locality
-      and cache line utilization, tracking length via `.length`.
+5. Results Analysis
+- Average times for C++:
+- 1,000 elements: ~0.0004 ms
+- 10,000 elements: ~0.0067 ms
+- 100,000 elements: ~0.0596 ms
 
-2.2 Thread Partitioning:
-    - In Laboratory 0, the sequential baseline algorithm is established.
-    - The thread count parameter (p in {1, 2, 4, 8, 16}) is received through the
-      command-line interface to establish compatibility with the automated test
-      harness. The sequential algorithm processes elements on the main thread,
-      serving as the reference against which future parallel implementations
-      (Labs 1+) will be verified and compared.
-
-2.3 Functions and Specifications:
-    Both C++ and Java implementations adhere to identical function signatures
-    and responsibilities:
-
-    A. `addVectors`:
-       - C++:  `std::vector<double> addVectors(const std::vector<double>& a, const std::vector<double>& b)`
-       - Java: `public static double[] addVectors(double[] a, double[] b)`
-       - Specification: Takes two input vectors A and B of length n passed by
-         reference, computes element-wise sum C[i] = A[i] + B[i], and returns C.
-
-    B. `readInput`:
-       - C++:  `bool readInput(const std::string& filename, size_t& n, std::vector<double>& a, std::vector<double>& b)`
-       - Java: `public static double[][] readInput(String filename) throws IOException`
-       - Specification: Reads size n from line 1 of the file, followed by n
-         doubles for vector A and n doubles for vector B.
-
-    C. `writeOutput`:
-       - C++:  `bool writeOutput(const std::string& filename, size_t n, const std::vector<double>& c)`
-       - Java: `public static void writeOutput(String filename, int n, double[] c) throws IOException`
-       - Specification: Writes size n on line 1, followed by n doubles formatted
-         to 4 decimal places separated by spaces.
-
-    D. `compareFiles`:
-       - C++:  `bool compareFiles(const std::string& file1, const std::string& file2)`
-       - Java: `public static boolean compareFiles(String file1, String file2) throws IOException`
-       - Specification: Reads sizes and values from two output files, comparing
-         floating-point numbers with an absolute epsilon threshold (1e-4) to
-         ensure numerical equivalence without floating-point precision artifacts.
-
-    E. `main`:
-       - Evaluates CLI arguments (<input_file> <output_file> <threads>).
-       - Loads input data from disk.
-       - Records start timestamp immediately prior to `addVectors`.
-       - Invokes `addVectors`.
-       - Records end timestamp immediately upon completion.
-       - Saves result vector C to output file.
-       - Emits CSV-formatted metric to stdout: `size,threads,elapsed_milliseconds`.
-
-
-3. IMPLEMENTATION DETAILS
---------------------------------------------------------------------------------
-3.1 C++ Implementation (`main.cpp`):
-    - Language Standard: C++17.
-    - Timing Mechanism: `std::chrono::high_resolution_clock` with
-      `std::chrono::duration<double, std::milli>` for fractional millisecond
-      granularity.
-    - Optimization / Compilation:
-      `clang++ -std=c++17 -Wall -Wextra -O2 main.cpp -o main`
-    - Parameter Passing: `const std::vector<double>&` prevents copying overhead
-      prior to timing, matching Java's reference semantics.
-
-3.2 Java Implementation (`Main.java`):
-    - Language Standard: Java 25 (OpenJDK).
-    - Timing Mechanism: `System.nanoTime()` converted to milliseconds via
-      division by 1,000,000.0.
-    - File I/O: Buffered streaming with `BufferedReader`, `StringTokenizer`, and
-      `BufferedWriter` for efficient parsing of large datasets (100,000 doubles).
-    - Compilation:
-      `javac JavaAddVectors/src/Main.java -d JavaAddVectors/out`
-
-3.3 Verification Strategy:
-    - In accordance with the verification guidelines, every execution produces
-      an output file (`output_cpp_<size>.txt` and `output_java_<size>.txt`).
-    - The outputs are evaluated through `compareFiles` and shell diff checks:
-      `diff -u output_cpp_<size>.txt output_java_<size>.txt`
-      confirming that both implementations yield identical results across all
-      problem sizes.
-
-3.4 Automation & Testing Scripts:
-    - `benchmark_sizes <retries> "<command>"`:
-      Automates execution loops across pre-established problem sizes
-      (1,000, 10,000, 100,000 elements).
-    - `repeat <retries> "<command>" <size>`:
-      Executes 10 distinct runs for each thread configuration (1, 2, 4, 8, 16)
-      and outputs data directly to CSV.
-    - `averages <file.csv>`:
-      Uses `awk` to aggregate and calculate arithmetic means grouped by problem
-      size and thread configuration.
-
-
-4. TEST CASES
---------------------------------------------------------------------------------
-4.1 Input File Specification:
-    Generated deterministically via `generate_inputs.py` (seed = 42).
-    - Format:
-      Line 1: Integer n (element count)
-      Line 2: Vector A elements (space-delimited doubles rounded to 4 decimals)
-      Line 3: Vector B elements (space-delimited doubles rounded to 4 decimals)
-
-4.2 Test Dimensions:
-    - Test Case 1 (Small):  n = 1,000 elements
-    - Test Case 2 (Medium): n = 10,000 elements
-    - Test Case 3 (Large):  n = 100,000 elements
-    - Thread Counts per size: p in {1, 2, 4, 8, 16}
-    - Repetitions per test: 10 independent executions
-    - Total Executions per language: 3 sizes * 5 thread counts * 10 runs = 150 runs
-
-
-5. RESULTS ANALYSIS
---------------------------------------------------------------------------------
-5.1 Measured Averages (10 Executions per Configuration):
-
-+--------------------+-----------+--------------------+--------------------+
-| Problem Size (n)   | Threads   | C++ Average (ms)   | Java Average (ms)  |
-+--------------------+-----------+--------------------+--------------------+
-| 1,000 elements     | 1 thread  | 0.0004 ms          | 0.0088 ms          |
-| 1,000 elements     | 2 threads | 0.0003 ms          | 0.0085 ms          |
-| 1,000 elements     | 4 threads | 0.0003 ms          | 0.0086 ms          |
-| 1,000 elements     | 8 threads | 0.0003 ms          | 0.0085 ms          |
-| 1,000 elements     | 16 threads| 0.0003 ms          | 0.0084 ms          |
-+--------------------+-----------+--------------------+--------------------+
-| 10,000 elements    | 1 thread  | 0.0067 ms          | 0.0697 ms          |
-| 10,000 elements    | 2 threads | 0.0065 ms          | 0.0743 ms          |
-| 10,000 elements    | 4 threads | 0.0059 ms          | 0.0687 ms          |
-| 10,000 elements    | 8 threads | 0.0071 ms          | 0.0690 ms          |
-| 10,000 elements    | 16 threads| 0.0061 ms          | 0.0688 ms          |
-+--------------------+-----------+--------------------+--------------------+
-| 100,000 elements   | 1 thread  | 0.0596 ms          | 0.5911 ms          |
-| 100,000 elements   | 2 threads | 0.0608 ms          | 0.5864 ms          |
-| 100,000 elements   | 4 threads | 0.0589 ms          | 0.6090 ms          |
-| 100,000 elements   | 8 threads | 0.0593 ms          | 0.6494 ms          |
-| 100,000 elements   | 16 threads| 0.0597 ms          | 0.6221 ms          |
-+--------------------+-----------+--------------------+--------------------+
-
-5.2 Discussion and Observations:
-    1. Algorithmic Complexity:
-       Both implementations strictly exhibit O(n) linear execution scaling.
-       When n increases by a factor of 10 (from 10,000 to 100,000), execution
-       time scales approximately 10x in both C++ (~0.006ms -> ~0.060ms) and
-       Java (~0.069ms -> ~0.600ms).
-
-    2. C++ vs. Java Performance Disparity:
-       The compiled C++ binary (-O2 optimization with Clang/LLVM) runs
-       consistently ~10x faster than Java. This difference stems from:
-       - Direct machine code execution and SIMD auto-vectorization in C++
-         (utilizing AVX/NEON registers for packed double arithmetic).
-       - JVM startup and JIT warmup characteristics: repeated external
-         invocations trigger fresh JVM instances per run, meaning the JIT
-         compiler cannot fully amortize bytecode interpretation and initial
-         compilation phases.
-       - Implicit array boundary checks performed by the JVM on each index access.
-
-    3. Invariance with Thread Parameter (Sequential Baseline):
-       Across all test cases, varying the thread count parameter (1 to 16)
-       produces virtually identical execution times within natural timing jitter.
-       This confirms that the sequential baseline is unaffected by thread
-       parameterization and provides a stable baseline for comparing future
-       parallel implementations.
-
-    4. Correctness:
-       All output files generated across tests matched with zero discrepancies
-       (`diff -u` returning exit code 0 and `compareFiles` returning true),
-       confirming complete correctness across both programming languages.
-================================================================================
+- Average times for Java:
+- 1,000 elements: ~0.0088 ms
+- 10,000 elements: ~0.0697 ms
+- 100,000 elements: ~0.5911 ms
