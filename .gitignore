@@ -1,0 +1,8 @@
+#gitignore for Java and for ignoring intellij and vscode files
+# Compiled class file
+*.class
+*.xml
+# Log file
+*.log
+*.iml
+*.idea/
