@@ -9,16 +9,15 @@ using std::chrono::high_resolution_clock;
 
 int main(int argc, char* argv[]) {
     if (argc != 4) {
-        std::cerr << "Usage: " << argv[0] << " <MatrixF_file> <output_file> <threads>\n";
+        std::cerr << "Usage: " << argv[0] << " <input_folder> <output_file> <threads>\n";
         return 1;
     }
 
-    std::string matrixFile = argv[1];
+    std::string inputFolder = argv[1];
     std::string outputFile = argv[2];
-    int threads = std::stoi(argv[3]);  // ignored, the sequential version uses only the main thread
-
+    int threads = std::stoi(argv[3]); 
     Matrix matrix, kernel, result;
-    if (!readInput(matrixFile, matrix, kernel, result)) {
+    if (!readInput(inputFolder, matrix, kernel, result)) {
         return 1;
     }
 
@@ -28,7 +27,6 @@ int main(int argc, char* argv[]) {
 
     writeOutput(outputFile, result);
 
-    /* Getting number of milliseconds as a double. */
     duration<double, std::milli> msDouble = time2 - time1;
     std::cout << matrix.rows << "x" << matrix.cols << "," << threads << "," << msDouble.count() << "\n";
 

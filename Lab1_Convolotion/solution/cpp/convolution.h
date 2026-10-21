@@ -5,15 +5,12 @@
 #include <iostream>
 #include <string>
 
-// Dynamically allocated matrix, stored row by row: element (i, j) is data[i * cols + j].
 struct Matrix {
     int rows = 0;
     int cols = 0;
     int* data = nullptr;
 };
 
-// Keeps an index inside [0, size - 1]. This simulates the virtual border:
-// an element outside the matrix is equal to the closest boundary element.
 inline int clampIndex(int index, int size) {
     if (index < 0) {
         return 0;
@@ -24,7 +21,6 @@ inline int clampIndex(int index, int size) {
     return index;
 }
 
-// Computes result(i, j) for rowStart <= i < rowEnd and colStart <= j < colEnd.
 inline void convolveRegion(const Matrix& matrix, const Matrix& kernel, Matrix& result,
                            int rowStart, int rowEnd, int colStart, int colEnd) {
     int n = matrix.rows;
@@ -47,7 +43,6 @@ inline void convolveRegion(const Matrix& matrix, const Matrix& kernel, Matrix& r
     }
 }
 
-// File format: first line "rows cols", then the elements row by row.
 inline bool readMatrix(const std::string& filename, Matrix& matrix) {
     std::ifstream in(filename);
     if (!in.is_open()) {
@@ -81,18 +76,12 @@ inline bool writeOutput(const std::string& filename, const Matrix& matrix) {
     return true;
 }
 
-// The convolution matrix is always named ConvolutionM.txt and sits next to MatrixF.txt.
-inline std::string kernelFileFor(const std::string& matrixFile) {
-    size_t slash = matrixFile.find_last_of('/');
-    if (slash == std::string::npos) {
-        return "ConvolutionM.txt";
-    }
-    return matrixFile.substr(0, slash + 1) + "ConvolutionM.txt";
-}
+const std::string MATRIX_FILE = "MatrixF.txt";
+const std::string KERNEL_FILE = "ConvolutionM.txt";
 
-// Reads F and C and allocates the result matrix V with the same size as F.
-inline bool readInput(const std::string& matrixFile, Matrix& matrix, Matrix& kernel, Matrix& result) {
-    if (!readMatrix(matrixFile, matrix) || !readMatrix(kernelFileFor(matrixFile), kernel)) {
+inline bool readInput(const std::string& inputFolder, Matrix& matrix, Matrix& kernel, Matrix& result) {
+    if (!readMatrix(inputFolder + "/" + MATRIX_FILE, matrix) ||
+        !readMatrix(inputFolder + "/" + KERNEL_FILE, kernel)) {
         return false;
     }
     if (kernel.rows != kernel.cols || kernel.rows % 2 == 0) {

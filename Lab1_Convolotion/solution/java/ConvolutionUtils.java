@@ -6,7 +6,6 @@ import java.io.PrintWriter;
 
 public class ConvolutionUtils {
 
-    // Matrix stored row by row: element (i, j) is data[i * cols + j].
     public static class Matrix {
         public final int rows;
         public final int cols;
@@ -19,8 +18,6 @@ public class ConvolutionUtils {
         }
     }
 
-    // Keeps an index inside [0, size - 1]. This simulates the virtual border:
-    // an element outside the matrix is equal to the closest boundary element.
     public static int clampIndex(int index, int size) {
         if (index < 0) {
             return 0;
@@ -31,7 +28,6 @@ public class ConvolutionUtils {
         return index;
     }
 
-    // Computes result(i, j) for rowStart <= i < rowEnd and colStart <= j < colEnd.
     public static void convolveRegion(Matrix matrix, Matrix kernel, Matrix result,
                                       int rowStart, int rowEnd, int colStart, int colEnd) {
         int n = matrix.rows;
@@ -54,7 +50,6 @@ public class ConvolutionUtils {
         }
     }
 
-    // File format: first line "rows cols", then one matrix row per line.
     public static Matrix readMatrix(String filename) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
             String[] header = reader.readLine().trim().split("\\s+");
@@ -85,13 +80,15 @@ public class ConvolutionUtils {
         }
     }
 
-    // The convolution matrix is always named ConvolutionM.txt and sits next to MatrixF.txt.
-    public static String kernelFileFor(String matrixFile) {
-        return new File(new File(matrixFile).getParentFile(), "ConvolutionM.txt").getPath();
+    public static final String MATRIX_FILE = "MatrixF.txt";
+    public static final String KERNEL_FILE = "ConvolutionM.txt";
+
+    public static Matrix readMatrixF(String inputFolder) throws IOException {
+        return readMatrix(new File(inputFolder, MATRIX_FILE).getPath());
     }
 
-    public static Matrix readKernel(String matrixFile) throws IOException {
-        Matrix kernel = readMatrix(kernelFileFor(matrixFile));
+    public static Matrix readKernel(String inputFolder) throws IOException {
+        Matrix kernel = readMatrix(new File(inputFolder, KERNEL_FILE).getPath());
         if (kernel.rows != kernel.cols || kernel.rows % 2 == 0) {
             throw new IOException("The convolution matrix must be k x k with k odd");
         }

@@ -27,7 +27,7 @@ Lab 1 - PPD - Convolution Matrix
 - C++ uses std::chrono for timing, compiled with g++ -O3 -std=c++17.
 - Java uses System.nanoTime() for timing.
 - Two allocation variants in C++: dynamic (new int[]) and static (global arrays).
-- Input: MatrixF.txt and ConvolutionM.txt in the same folder.
+- Input: the programs receive the input folder, which must contain MatrixF.txt and ConvolutionM.txt (names are fixed in the code).
 - Output: Single matrix file with same format as input.
 
 4. Test Cases

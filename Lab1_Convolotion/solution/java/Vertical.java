@@ -52,16 +52,16 @@ public class Vertical {
 
     public static void main(String[] args) throws Exception {
         if (args.length != 3) {
-            System.err.println("Usage: java Vertical <MatrixF_file> <output_file> <threads>");
+            System.err.println("Usage: java Vertical <input_folder> <output_file> <threads>");
             return;
         }
 
-        String matrixFile = args[0];
+        String inputFolder = args[0];
         String outputFile = args[1];
         int threadCount = Integer.parseInt(args[2]);
 
-        ConvolutionUtils.Matrix matrix = ConvolutionUtils.readMatrix(matrixFile);
-        ConvolutionUtils.Matrix kernel = ConvolutionUtils.readKernel(matrixFile);
+        ConvolutionUtils.Matrix matrix = ConvolutionUtils.readMatrixF(inputFolder);
+        ConvolutionUtils.Matrix kernel = ConvolutionUtils.readKernel(inputFolder);
         ConvolutionUtils.Matrix result = new ConvolutionUtils.Matrix(matrix.rows, matrix.cols);
 
         long time1 = System.nanoTime();

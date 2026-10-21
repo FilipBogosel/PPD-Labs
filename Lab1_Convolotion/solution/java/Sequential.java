@@ -2,16 +2,15 @@ public class Sequential {
 
     public static void main(String[] args) throws Exception {
         if (args.length != 3) {
-            System.err.println("Usage: java Sequential <MatrixF_file> <output_file> <threads>");
+            System.err.println("Usage: java Sequential <input_folder> <output_file> <threads>");
             return;
         }
 
-        String matrixFile = args[0];
+        String inputFolder = args[0];
         String outputFile = args[1];
-        int threads = Integer.parseInt(args[2]);  // ignored, the sequential version uses only the main thread
-
-        ConvolutionUtils.Matrix matrix = ConvolutionUtils.readMatrix(matrixFile);
-        ConvolutionUtils.Matrix kernel = ConvolutionUtils.readKernel(matrixFile);
+        int threads = Integer.parseInt(args[2]);  
+        ConvolutionUtils.Matrix matrix = ConvolutionUtils.readMatrixF(inputFolder);
+        ConvolutionUtils.Matrix kernel = ConvolutionUtils.readKernel(inputFolder);
         ConvolutionUtils.Matrix result = new ConvolutionUtils.Matrix(matrix.rows, matrix.cols);
 
         long time1 = System.nanoTime();

@@ -28,14 +28,12 @@ public class Horizontal {
             throws InterruptedException {
         int n = matrix.rows;
 
-        // Guard against requesting more threads than rows
         int activeThreads = Math.min(threadCount, n);
         Worker[] threads = new Worker[activeThreads];
 
         int sliceSize = n / activeThreads;
         int remainder = n % activeThreads;
 
-        // The first "remainder" threads get one extra row, so the work is balanced
         int begin = 0;
         for (int t = 0; t < activeThreads; t++) {
             int extraRow = (t < remainder) ? 1 : 0;
@@ -52,16 +50,16 @@ public class Horizontal {
 
     public static void main(String[] args) throws Exception {
         if (args.length != 3) {
-            System.err.println("Usage: java Horizontal <MatrixF_file> <output_file> <threads>");
+            System.err.println("Usage: java Horizontal <input_folder> <output_file> <threads>");
             return;
         }
 
-        String matrixFile = args[0];
+        String inputFolder = args[0];
         String outputFile = args[1];
         int threadCount = Integer.parseInt(args[2]);
 
-        ConvolutionUtils.Matrix matrix = ConvolutionUtils.readMatrix(matrixFile);
-        ConvolutionUtils.Matrix kernel = ConvolutionUtils.readKernel(matrixFile);
+        ConvolutionUtils.Matrix matrix = ConvolutionUtils.readMatrixF(inputFolder);
+        ConvolutionUtils.Matrix kernel = ConvolutionUtils.readKernel(inputFolder);
         ConvolutionUtils.Matrix result = new ConvolutionUtils.Matrix(matrix.rows, matrix.cols);
 
         long time1 = System.nanoTime();

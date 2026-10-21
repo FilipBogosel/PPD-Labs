@@ -12,9 +12,15 @@ THREAD_COUNTS="2 4 8 16"
 
 echo "Compiling..."
 mkdir -p bin/java results
+# Dynamic C++
 g++ -O3 -std=c++17 cpp/sequential.cpp -o bin/sequential || exit 1
 g++ -O3 -std=c++17 cpp/horizontal.cpp -o bin/horizontal || exit 1
 g++ -O3 -std=c++17 cpp/vertical.cpp -o bin/vertical || exit 1
+# Static C++
+g++ -O3 -std=c++17 cpp/static/sequential.cpp -o bin/seq_static || exit 1
+g++ -O3 -std=c++17 cpp/static/horizontal.cpp -o bin/horiz_static || exit 1
+g++ -O3 -std=c++17 cpp/static/vertical.cpp -o bin/vert_static || exit 1
+# Java
 javac -d bin/java java/*.java || exit 1
 
 # run_and_verify <csv_file> <test_folder> <command...>
@@ -39,7 +45,7 @@ run_test_case() {
     local folder=${1%/}
     local name
     name=$(basename "$folder")
-    local input="$folder/MatrixF.txt"
+    local input="$folder"
     local output="$folder/output.txt"
 
     # The 10x10 case is only required with p = 4
@@ -55,11 +61,17 @@ run_test_case() {
     bin/sequential "$input" "$folder/expected_output.txt" 1 > /dev/null || exit 1
 
     run_and_verify "results/cpp_sequential_$name.csv" "$folder" bin/sequential "$input" "$output" 1
+    run_and_verify "results/cpp_static_sequential_$name.csv" "$folder" bin/seq_static "$input" "$output" 1
     run_and_verify "results/java_sequential_$name.csv" "$folder" java -cp bin/java Sequential "$input" "$output" 1
 
     for threads in $thread_counts; do
+        # Dynamic C++
         run_and_verify "results/cpp_horizontal_$name.csv" "$folder" bin/horizontal "$input" "$output" "$threads"
         run_and_verify "results/cpp_vertical_$name.csv" "$folder" bin/vertical "$input" "$output" "$threads"
+        # Static C++
+        run_and_verify "results/cpp_static_horizontal_$name.csv" "$folder" bin/horiz_static "$input" "$output" "$threads"
+        run_and_verify "results/cpp_static_vertical_$name.csv" "$folder" bin/vert_static "$input" "$output" "$threads"
+        # Java
         run_and_verify "results/java_horizontal_$name.csv" "$folder" java -cp bin/java Horizontal "$input" "$output" "$threads"
         run_and_verify "results/java_vertical_$name.csv" "$folder" java -cp bin/java Vertical "$input" "$output" "$threads"
     done
