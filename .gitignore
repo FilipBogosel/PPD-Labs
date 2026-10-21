@@ -7,3 +7,8 @@
 *.iml
 *.idea/
 *.DS_Store
+# Lab1 convolution: build folders and the 10000x10000 test data (too large for git)
+Lab1_Convolotion/solution/bin/
+Lab1_Convolotion/solution/bin_static/
+Lab1_Convolotion/solution/tests/10000x10000_k5/
+a

@@ -1,0 +1,75 @@
+Lab 1 - PPD - Convolution Matrix
+
+1. Requirements Analysis
+- Write a program that applies a convolution matrix (kernel) to an input matrix.
+- The convolution uses border clamping (virtual border equals nearest boundary element).
+- Implement sequential and parallel versions with two decomposition strategies: horizontal and vertical.
+- Use explicit thread creation (no Executors).
+- Measure execution time only for the computation (excluding file I/O).
+- Run each test 10 times and calculate the average time.
+- Verify that parallel output matches sequential output for each run.
+
+2. Design
+- Data Structures:
+  - C++ Dynamic: int* with 1D array indexed as data[i * cols + j]
+  - C++ Static: global int matrixF[MAX_N][MAX_M] with MAX_N=MAX_M=10000
+  - Java: int[] with 1D array in ConvolutionUtils.Matrix class
+- Thread Partitioning: Balanced load distribution using sliceSize + remainder pattern.
+  - Horizontal: Each thread computes a band of consecutive rows (all columns).
+  - Vertical: Each thread computes a band of consecutive columns (all rows).
+- Functions used:
+  - readMatrix: Reads matrix from file (first line: "rows cols", then elements row by row).
+  - convolveRegion: Computes convolution for a sub-rectangle with border clamping.
+  - writeOutput: Writes result matrix to file.
+  - main: Handles arguments, timing, and calls appropriate functions.
+
+3. Implementation Details
+- C++ uses std::chrono for timing, compiled with g++ -O3 -std=c++17.
+- Java uses System.nanoTime() for timing.
+- Two allocation variants in C++: dynamic (new int[]) and static (global arrays).
+- Input: MatrixF.txt and ConvolutionM.txt in the same folder.
+- Output: Single matrix file with same format as input.
+
+4. Test Cases
+- 10x10 with k=3, p=4 (required by spec)
+- 1000x1000 with k=3, p=2,4,8,16
+- 10x10000 with k=5, p=2,4,8,16
+- 10000x10 with k=5, p=2,4,8,16
+- 10000x10000 with k=5, p=2,4,8,16
+
+5. Results Analysis
+
+FASTEST CASE RESULTS (p=8):
+
+Test: 1000x1000_k3 (horizontal, p=8)
+  Dynamic: seq=5.68ms, par=1.22ms, speedup=4.65x
+  Static:  seq=5.85ms, par=1.64ms, speedup=3.57x
+
+Test: 10000x10_k5 (horizontal, p=8)
+  Dynamic: seq=1.07ms, par=0.32ms, speedup=3.34x
+  Static:  seq=9.06ms, par=4.26ms, speedup=2.13x (static slower on small dimension)
+
+Test: 10x10000_k5 (vertical, p=8)
+  Dynamic: seq=1.11ms, par=0.30ms, speedup=3.70x
+  Static:  seq=1.06ms, par=0.32ms, speedup=3.31x
+
+Test: 10000x10000_k5 (vertical, p=8)
+  Dynamic: seq=1103.48ms, par=222.88ms, speedup=4.95x
+  Static:  seq=1078.68ms, par=211.19ms, speedup=5.11x
+
+Observations:
+- Dynamic allocation is generally faster or comparable to static allocation.
+- For tall matrices (10000x10), static is significantly slower due to memory layout.
+- Horizontal decomposition works best for wide matrices.
+- Vertical decomposition works best for tall matrices.
+- Best speedup achieved: ~5x on 10000x10000 with vertical decomposition.
+- Java parallel versions show slower performance on small matrices due to JVM warmup overhead.
+
+6. Best Variant Per Size
+- 1000x1000: Horizontal (4.65x speedup)
+- 10000x10: Horizontal (3.34x speedup)
+- 10x10000: Vertical (3.70x speedup)
+- 10000x10000: Vertical (~5x speedup)
+
+7. Verification
+All parallel outputs were verified to be identical to sequential outputs for every run.
