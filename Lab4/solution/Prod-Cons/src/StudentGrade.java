@@ -1,0 +1,1 @@
+public record StudentGrade(int studentId, int totalGrade) {}

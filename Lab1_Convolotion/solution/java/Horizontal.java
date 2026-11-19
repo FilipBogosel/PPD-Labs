@@ -1,6 +1,5 @@
 public class Horizontal {
 
-    // Each worker computes a band of consecutive rows (all columns).
     private static class Worker extends Thread {
         private final ConvolutionUtils.Matrix matrix;
         private final ConvolutionUtils.Matrix kernel;

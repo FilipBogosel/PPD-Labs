@@ -11,11 +11,9 @@
 using std::chrono::duration;
 using std::chrono::high_resolution_clock;
 
-// Horizontal decomposition: every thread computes a band of consecutive rows (all columns).
 void convolveHorizontal(const Matrix& matrix, const Matrix& kernel, Matrix& result, int threadCount) {
     int n = matrix.rows;
 
-    // Guard against requesting more threads than rows
     int activeThreads = std::min(threadCount, n);
     std::vector<std::thread> threads;
 

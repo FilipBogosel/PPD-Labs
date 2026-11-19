@@ -1,0 +1,91 @@
+Lab 2 - PPD - In-place Convolution (3x3)
+
+1. Requirements
+- Apply a 3x3 convolution matrix to an N x M integer matrix, IN PLACE: the input matrix itself
+  ends up holding the result. No second matrix, no O(N x M) temporary; extra space is O(M) (1D rows only).
+- Horizontal decomposition: each thread gets a band of consecutive rows.
+- Explicit threads only (std::thread in C++, Thread subclass in Java). No thread pools/executors.
+- Border clamping: elements outside the matrix equal the closest boundary element.
+- Time only the computation (no file reading/writing). 10 runs per test, arithmetic mean.
+- Every run is checked against the sequential output.
+
+2. Design
+- Matrix stored in one flat array (std::vector<int> / int[]), element (i, j) = matrix[i * M + j].
+- Problem: a thread overwrites its rows, so the rows next to its band (which belong to the
+  neighbour threads) may already be overwritten when it reads them (read-after-write).
+- Fix (done by the main thread BEFORE any worker starts):
+  1. Split the rows in balanced bands: slice = N / p, the first (N % p) threads get one extra row.
+  2. For every band copy two 1D rows: topBoundary = row max(start - 1, 0),
+     bottomBoundary = row min(end, N - 1).
+  3. Start the threads and pass them their two copies.
+- Worker (convolveBandInPlace), for each row i in [start, end):
+  1. currRow = snapshot of the original row i (row i is overwritten below).
+  2. next row = matrix row i + 1 if it is inside the band (still original), else bottomBoundary.
+  3. matrix[i][j] = sum of the 3x3 neighbourhood from prevRow, currRow, next row, with column
+     indexes clamped; the kernel is applied without flipping (same as Lab 1).
+  4. prevRow = currRow (done with a swap, equivalent because currRow is fully rewritten next step).
+- Sequential = the same function with one band: p = 1, start = 0, end = N.
+- Extra memory per thread: 2 boundary rows + prevRow + currRow = 4 rows of M ints.
+
+3. Implementation
+- C++17: cpp/convolution.h (I/O, clampIndex, convolveBandInPlace), cpp/sequential.cpp, cpp/parallel.cpp.
+- Java:  java/ConvolutionUtils.java (same logic), java/Sequential.java, java/Parallel.java.
+- Input: <folder>/date.txt = "N M", N rows, "3 3", 3 kernel rows. Output: "N M" and the rows.
+- Usage: <program> <input_folder> <output_file> <threads>; prints "NxM,threads,ms" (computation only;
+  it includes copying the boundary rows and starting/joining the threads).
+- generate_inputs.py creates tests/<N>x<M>/date.txt (seed 42, values 0..255, kernel -2..2).
+- run_tests.sh compiles, runs every variant 10 times, compares each run with the sequential
+  C++ result and appends the timings to results/*.csv; compute_averages prints the means.
+
+4. Verification (what was actually checked)
+- run_tests.sh: all runs of the 10x10 (p=2) and 1000x1000 (p=2,4,8,16) tests, C++ and Java,
+  matched the sequential output (10 of 10 runs for every configuration).
+- The Lab 1 inputs converted to the date.txt format reproduce Lab 1's verified outputs byte for byte
+  (10x10 and 1000x1000, sequential and p=2,4,8,16, C++ and Java: 20 of 20 identical).
+- 120 extra checks against an independent Python implementation on odd shapes (1x1, 1xM, Nx1,
+  2xM, p > N, uneven bands): 0 mismatches.
+- Space (10000x10000, 381 MB matrix, peak memory): C++ +1.9 MB (sequential), +4.9 MB (p=16).
+  Java ran correctly with a 600 MB heap limit, where a second matrix could not fit.
+
+5. Results (10 runs, ms). Speedup = mean(sequential) / mean(parallel).
+   The median is shown because single slow runs distort the mean.
+
+N = M = 10, p = 2
+Language | Threads | Mean     | Median   | Speedup
+C++      | 1 (seq) | 0.0005   | 0.0005   | 1.00
+C++      | 2       | 0.0297   | 0.0256   | 0.02
+Java     | 1 (seq) | 0.0129   | 0.0128   | 1.00
+Java     | 2       | 0.2824   | 0.2765   | 0.05
+
+N = M = 1000
+Language | Threads | Mean     | Median   | Speedup
+C++      | 1 (seq) | 1.3268   | 1.3179   | 1.00
+C++      | 2       | 0.9313   | 0.7323   | 1.42
+C++      | 4       | 2.0412   | 0.4085   | 0.65
+C++      | 8       | 0.4530   | 0.3965   | 2.93
+C++      | 16      | 0.3807   | 0.3690   | 3.49
+Java     | 1 (seq) | 8.2277   | 7.9776   | 1.00
+Java     | 2       | 10.8349  | 10.6815  | 0.76
+Java     | 4       | 11.8074  | 11.3496  | 0.70
+Java     | 8       | 12.1526  | 12.1591  | 0.68
+Java     | 16      | 14.7850  | 13.8513  | 0.56
+
+N = M = 10000: NOT measured yet. Run "./run_tests.sh tests/10000x10000" to fill this table
+(about 100 runs that each read and write ~350 MB).
+
+6. Observations
+- 10x10: the work is about 0.5 microseconds, so creating threads costs far more than the computation.
+- 1000x1000, C++: the C++ mean at p=4 (2.04 ms) is caused by ONE run of 16.7 ms; the other nine
+  are 0.39-0.44 ms. Using the median, the speedups are 1.80 / 3.23 / 3.32 / 3.57 for p = 2/4/8/16.
+  The mean at p=2 is also pulled up by one slow run (2.24 ms). These look like OS scheduling
+  hiccups; I did not investigate them further.
+- The best speedup is about 3.5x, lower than in Lab 1, because the whole job is only about 1.3 ms.
+  Sequential in-place C++ takes 1.33 ms here, against 11.3 ms for Lab 1's generic version on the same
+  size and kernel size, so the fixed cost of starting threads is a much larger part of the time.
+  I did not measure the thread start-up cost separately, so this is the likely explanation, not a proven one.
+- Java is slower in parallel than sequentially at both sizes. Each run is a fresh JVM that executes the
+  convolution once, so the time is dominated by JIT warm-up and thread start-up, not by the arithmetic
+  (the Lab 1 experiments with JIT flags pointed the same way). Java should only gain on the large test.
+- Java sequential is 6x slower than C++ at 1000x1000 (8.2 ms against 1.33 ms).
+- Machine: Apple M4 laptop (4 performance + 6 efficiency cores), so more than 10 threads
+  cannot run truly in parallel.

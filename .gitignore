@@ -17,3 +17,32 @@ Lab1_Convolotion/solution/results_fastest/
 *.csv
 Lab1_Convolotion/given/
 Lab1_Class/
+Lab1_Convolotion/solution/tests
+Lab2_Convolotion_optimized/solution/tests
+
+# Lab2 convolution (in place): build folder, test data, and results (too large for git)
+Lab2_Convolution_optimized/solution/bin/
+Lab2_Convolution_optimized/solution/tests/
+Lab2_Convolution_optimized/solution/results/
+
+# VS Code settings
+.vscode/
+**/.vscode/
+
+# Lab2_Class compiled binary
+Lab2_Class/scalar_product
+
+# Lab3 MPI: compiled binaries, generated test data, and results
+Lab3-MPI/solution/bin/
+Lab3-MPI/solution/tests/
+Lab3-MPI/solution/results/
+
+# Lab4 Producer-Consumer: build folders, generated test data, outputs, and results
+Lab4/bin/
+Lab4/results/
+Lab4/Results.txt
+Lab4/solution/test_data/
+Lab4/solution/Prod-Cons/.gitignore
+Lab4/solution/Prod-Cons/out/
+Lab4/solution/Prod-Cons/output.txt
+

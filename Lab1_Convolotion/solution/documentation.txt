@@ -1,4 +1,4 @@
-Lab 1 - PPD - Convolution Matrix
+  Lab 1 - PPD - Convolution Matrix
 
 1. Requirements Analysis
 - Write a program that applies a convolution matrix (kernel) to an input matrix.
